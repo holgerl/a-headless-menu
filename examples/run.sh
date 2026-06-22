@@ -1,0 +1,1 @@
+gcc -std=c99 extended-example.c ../src/menu.c -o temp.o && ./temp.o
