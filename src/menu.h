@@ -22,6 +22,7 @@ typedef struct {
     int nameBreakpoint;
     int * childrenIndices;
     int nofChildren;
+    int index;
     int parentIndex;
     int selectedIndex; // index of the focused child in childrenIndices (not the nodes array)
     bool isAction;

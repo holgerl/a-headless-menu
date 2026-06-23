@@ -4,7 +4,7 @@
 
 #include "menu.h"
 
-#define MAX_MENU_SIZE 32
+#define MAX_MENU_SIZE 64
 #define MAX_LINE_CHARACTERS 32
 
 const char * getShortValueName(MenuElement * element);
@@ -32,23 +32,15 @@ Menu createMenu(int pageSize, OnMenuValueChanged onMenuValueChanged, OnAction on
 }
 
 int getMenuNodeIndexByName(Menu * menu, const char * name) {
-    int index = -1;
-    for (int i = 0; i < menu->nofNodes; i++) {
+    for (int i = menu->nofNodes - 1; i >= 0; i--) { // Search most recently added nodes first, in case of duplicate names
         if (strcmp(menu->nodes[i].name, name) == 0) {
-            if (index != -1) {
-                printf("ERROR: Used name as key, but there were multiple menu nodes with the name %s\n", name);
-                //exit(EXIT_FAILURE);
-            }
-            index = i;
+            return i;
         }
     }
 
-    if (index == -1) {
-        printf("ERROR: Found no menu node with name %s\n", name);
-        //exit(EXIT_FAILURE);
-    }
-
-    return index;
+    printf("ERROR: Found no menu node with name %s\n", name);
+    //exit(EXIT_FAILURE);
+    return -1;
 }
 
 int createMenuLeaf(
@@ -89,18 +81,19 @@ int createMenuLeaf(
 
     menu->elements[menu->nofElements] = element;
 
+    int newIndex = menu->nofNodes;
+
     MenuNode node = {
         .element = &menu->elements[menu->nofElements],
         .name = name,
         .nameBreakpoint = 0, // Leaf nodes must fit their name
         .childrenIndices = NULL,
         .nofChildren = 0,
+        .index = newIndex,
         .parentIndex = -1,
         .selectedIndex = -1,
         .isAction = false
     };
-
-    int newIndex = menu->nofNodes;
 
     menu->nodes[newIndex] = node;
 
@@ -131,7 +124,7 @@ int createMenuNonLeaf(
     if (childrenIndices == NULL) { printf("%s\n", "ERROR: childrenIndices == NULL"); }
         
     for (int i = 0; i < nofChildren; i++) {
-        int childIndex = getMenuNodeIndexByName(menu, childrenNames[i]);
+        int childIndex = getMenuNodeIndexByName(menu, childrenNames[i]); // TODO: Dette gjør det umulig å ha barn med samme navn som allerede finnes
         childrenIndices[i] = childIndex;
         menu->nodes[childIndex].parentIndex = newIndex;
     }
@@ -142,6 +135,7 @@ int createMenuNonLeaf(
         .nameBreakpoint = nameBreakpoint,
         .childrenIndices = childrenIndices,
         .nofChildren = nofChildren,
+        .index = newIndex,
         .parentIndex = -1, // Will be set later
         .selectedIndex = 0,
         .isAction = false
@@ -172,6 +166,7 @@ int createMenuAction(
         .nameBreakpoint = nameBreakpoint,
         .childrenIndices = NULL,
         .nofChildren = 0,
+        .index = newIndex,
         .parentIndex = -1, // Will be set later
         .selectedIndex = 0,
         .isAction = true
@@ -251,7 +246,7 @@ void removeMenuChild(
     }
 
     if (foundAtIndex == -1) {
-        printf("%s\n", "ERROR: Tried to remove child from parent, but child was not found among parent's children");
+        printf("ERROR: Tried to remove child %d from parent %d, but child was not found among parent's children\n", childIndex, parentIndex);
         //exit(EXIT_FAILURE);
     }
 

@@ -8,6 +8,7 @@ A simple but versatile menu system for embedded C on tiny displays.
 - Headless works with any display
 - Can split text on two lines
 - Optimized for choosing integer and textual options
+- Structure can be changed during runtime
 - XXX kB compiled size
 - YYY kB memory size + ZZ bytes per menu item
 
