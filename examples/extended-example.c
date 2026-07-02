@@ -39,27 +39,27 @@ int dataParentMenuIndex;
 char lineTop[MAX_LINE_CHARACTERS];
 char lineBottom[MAX_LINE_CHARACTERS];
 
-void onMenuValueChanged(MenuValue element, int oldValue) {
-    if (strcmp(element.description, "MIDI CHANNEL") == 0) {
-        printf("MIDI channel changed from %d to %d\n", oldValue, *element.valuePointer);
-    } else if (strcmp(element.description, "DRONE NOTE") == 0) {
-        printf("Drone note changed from %d to %d\n", oldValue, *element.valuePointer);
-    }
-}
-
 void addNewMenuElement() {
     if (nofData >= 8) {
         printf("Max number of data elements reached\n");
         return;
     }
 
-    int childIndexA = createMenuLeaf(&menu, "PARAM A\n%s", "PARAMETER A", 0, 8, &data[nofData].paramA, NULL, NULL);
-    int childIndexB = createMenuLeaf(&menu, "PARAM B\n%s", "PARAMETER B", 0, 127, &data[nofData].paramB, NULL, NULL);
+    int childIndexA = createMenuLeaf(&menu, "ID\n%s", "Identity", 0, 8, &data[nofData].paramA);
+    int childIndexB = createMenuLeaf(&menu, "PARAM\n%s", "PARAMETER", 0, 127, &data[nofData].paramB);
     int deleteIndex = createMenuAction(&menu, "DEL\nETE");
-    const char * children[] = {"PARAM A\n%s", "PARAM B\n%s", "DEL\nETE"};
-    int parentIndex = createMenuNonLeaf(&menu, "DATA", children, 3);
+    const char * children[] = {"ID\n%s", "PARAM\n%s", "DEL\nETE"};
+    int parentIndex = createMenuNonLeaf(&menu, "DATA\n%s", children, 3);
     connectMenuChild(&menu, dataParentMenuIndex, parentIndex);
     nofData++;
+}
+
+void onMenuValueChanged(MenuValue menuValue, int oldValue) {
+    if (strcmp(menuValue.description, "MIDI CHANNEL") == 0) {
+        printf("MIDI channel changed from %d to %d\n", oldValue, *menuValue.valuePointer);
+    } else if (strcmp(menuValue.description, "DRONE NOTE") == 0) {
+        printf("Drone note changed from %d to %d\n", oldValue, *menuValue.valuePointer);
+    }
 }
 
 void onAction(MenuNode node) {
@@ -68,33 +68,54 @@ void onAction(MenuNode node) {
     } else if (strcmp(node.name, "ACTION") == 0) {
         printf("Performing action...\n");
     } else if (strcmp(node.name, "DEL\nETE") == 0) {
-        removeMenuChild(&menu, dataParentMenuIndex, node.parentIndex);
+        int dataMenuIndex = node.parentIndex;
+        goBackMenu(&menu);
+        goLeftMenu(&menu);
+        removeMenuChild(&menu, dataParentMenuIndex, dataMenuIndex);
+    }
+}
+
+void valueRenderer(MenuNode menuNode, int value, bool verbose, char * target) {
+    const char * envTypeShortNames[] = {"ADSR", "AR", "HOLD", "OPEN"};
+    const char * envTypeLongNames[] = {"Atk-Decay-Sust-Rel", "Attack-Release", "Hold-Release", "Open"};
+
+    // Using == here because it is fast and works in this file:
+    if (menuNode.name == "NOTE\n%s") {
+        sprintf(target, "note #%d", value);
+    } else if (menuNode.name == "STATE\n%s") {
+        sprintf(target, "%s", value ? "ON" : "OFF");
+    } else if (menuNode.name == "TYPE\n%s") {
+        sprintf(target, "%s", verbose ? envTypeLongNames[value] : envTypeShortNames[value]);
+    } else if (menuNode.name == "BRIGHT\n%s") {
+        sprintf(target, "%s", value ? "HIGH" : "LOW");
+    } else if (menuNode.name == "DATA\n%s") {
+        int value = *(menu.nodes[menuNode.childrenIndices[0]].element->valuePointer);
+        sprintf(target, "%d", value);
+    } else {
+        sprintf(target, "%d", value);
     }
 }
 
 void setupMenu() {
-    menu = createMenu(3, onMenuValueChanged, onAction);
+    menu = createMenu(3, onMenuValueChanged, onAction, valueRenderer);
 
-    const char * yesNoNames[] = {"NO", "YES"};
     const char * highLowNames[] = {"LOW", "HIGH"};
-    const char * onOffNames[] = {"OFF", "ON"};
 
-    createMenuLeaf(&menu, "STATE\n%s", "DRONE ENABLED", 0, 1, &settings.enabled, onOffNames, onOffNames);
-    createMenuLeaf(&menu, "NOTE\n%s", "DRONE NOTE", 0, 127, &settings.note, NULL, NULL);
+    createMenuLeaf(&menu, "STATE\n%s", "DRONE ENABLED", 0, 1, &settings.enabled);
+    createMenuLeaf(&menu, "NOTE\n%s", "DRONE NOTE", 0, 127, &settings.note);
     const char * droneChildren[] = {"STATE\n%s", "NOTE\n%s"};
     createMenuNonLeaf(&menu, "DRONE", droneChildren, 2);
 
-    const char * envTypeNames[] = {"ADSR", "AR"};
-    createMenuLeaf(&menu, "TYPE\n%s", "ENVELOPE TYPE", 0, 1, &settings.envelopeType, envTypeNames, envTypeNames);
-    createMenuLeaf(&menu, "ATTACK\n%s", "ENVELOPE ATTACK TIME", 0, 1000, &settings.attack, NULL, NULL);
-    createMenuLeaf(&menu, "DECAY\n%s", "ENVELOPE DECAY TIME", 0, 1000, &settings.decay, NULL, NULL);
-    createMenuLeaf(&menu, "SUST\n%s", "ENVELOPE SUSTAIN", 0, 100, &settings.sustain, NULL, NULL);
-    createMenuLeaf(&menu, "RELE\n%s", "ENVELOPE RELEASE TIME", 0, 1000, &settings.release, NULL, NULL);
+    createMenuLeaf(&menu, "TYPE\n%s", "ENVELOPE TYPE", 0, 3, &settings.envelopeType);
+    createMenuLeaf(&menu, "ATTACK\n%s", "ENVELOPE ATTACK TIME", 0, 1000, &settings.attack);
+    createMenuLeaf(&menu, "DECAY\n%s", "ENVELOPE DECAY TIME", 0, 1000, &settings.decay);
+    createMenuLeaf(&menu, "SUST\n%s", "ENVELOPE SUSTAIN", 0, 100, &settings.sustain);
+    createMenuLeaf(&menu, "RELE\n%s", "ENVELOPE RELEASE TIME", 0, 1000, &settings.release);
     const char * envelopeChildren[] = {"TYPE\n%s", "ATTACK\n%s", "DECAY\n%s", "SUST\n%s", "RELE\n%s"};
     createMenuNonLeaf(&menu, "ENVE\nLOPE", envelopeChildren, 5);
 
-    createMenuLeaf(&menu, "CHAN\n%s", "MIDI CHANNEL", 1, 16, &settings.channel, NULL, NULL);
-    createMenuLeaf(&menu, "BRIGHT\n%s", "DISPLAY BRIGHTNESS", 0, 1, &settings.brightness, highLowNames, highLowNames);
+    createMenuLeaf(&menu, "CHAN\n%s", "MIDI CHANNEL", 1, 16, &settings.channel);
+    createMenuLeaf(&menu, "BRIGHT\n%s", "DISPLAY BRIGHTNESS", 0, 1, &settings.brightness);
     createMenuAction(&menu, "ADD\nDATA");
     const char * systemChildren[] = {"CHAN\n%s", "BRIGHT\n%s", "ADD\nDATA"};
     dataParentMenuIndex = createMenuNonLeaf(&menu, "SYSTEM", systemChildren, 3);

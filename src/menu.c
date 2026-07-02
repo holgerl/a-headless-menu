@@ -7,9 +7,7 @@
 #define MAX_MENU_SIZE 64
 #define MAX_LINE_CHARACTERS 32
 
-const char * getShortValueName(MenuValue * element);
-
-Menu createMenu(int pageSize, OnMenuValueChanged onMenuValueChanged, OnAction onAction) {
+Menu createMenu(int pageSize, OnMenuValueChanged onMenuValueChanged, OnAction onAction, ValueRenderer valueRenderer) {
     MenuValue * elements = (MenuValue *) malloc(MAX_MENU_SIZE * sizeof(MenuValue));
     MenuNode * nodes = (MenuNode *) malloc(MAX_MENU_SIZE * sizeof(MenuNode));
 
@@ -26,7 +24,7 @@ Menu createMenu(int pageSize, OnMenuValueChanged onMenuValueChanged, OnAction on
     }
     MenuViewModel viewModel = {boxes, -1, false, false};
 
-    Menu menu = {elements, nodes, 0, 0, 0, 0, pageSize, false, viewModel, onMenuValueChanged, onAction};
+    Menu menu = {elements, nodes, 0, 0, 0, 0, pageSize, false, viewModel, onMenuValueChanged, onAction, valueRenderer};
 
     return menu;
 }
@@ -49,34 +47,18 @@ int createMenuLeaf(
     const char * description,
     int minimumValue,
     int maximumValue,
-    int * valuePointer,
-    const char * * shortValueNames,
-    const char * * longValueNames
+    int * valuePointer
 ) {
     if (menu->nofElements >= MAX_MENU_SIZE || menu->nofNodes >= MAX_MENU_SIZE) {
         printf("%s\n", "ERROR: Maximum menu size exceeded");
         //exit(EXIT_FAILURE);
     }
 
-    const char * * shortValueNamesCopy = NULL;
-    const char * * longValueNamesCopy = NULL;
-    if (shortValueNames != NULL) {
-        int nameArrayBytes = (maximumValue - minimumValue + 1) * sizeof(const char *);
-        shortValueNamesCopy = (const char * *) malloc(nameArrayBytes);
-        if (shortValueNamesCopy == NULL) { printf("%s\n", "ERROR: shortValueNamesCopy == NULL"); }
-        longValueNamesCopy = (const char * *) malloc(nameArrayBytes);
-        if (longValueNamesCopy == NULL) { printf("%s\n", "ERROR: longValueNamesCopy == NULL"); }
-        memcpy(shortValueNamesCopy, shortValueNames, nameArrayBytes);
-        memcpy(longValueNamesCopy, longValueNames, nameArrayBytes);
-    }
-
     MenuValue element = {
         .description = description,
         .minimumValue = minimumValue,
         .maximumValue = maximumValue,
-        .valuePointer = valuePointer,
-        .shortValueNames = shortValueNamesCopy,
-        .longValueNames = longValueNamesCopy
+        .valuePointer = valuePointer
     };
 
     menu->elements[menu->nofElements] = element;
@@ -122,7 +104,7 @@ int createMenuNonLeaf(
     if (childrenIndices == NULL) { printf("\n%s\n\n", "ERROR: childrenIndices == NULL"); }
         
     for (int i = 0; i < nofChildren; i++) {
-        int childIndex = getMenuNodeIndexByName(menu, childrenNames[i]); // TODO: Dette gjør det umulig å ha barn med samme navn som allerede finnes
+        int childIndex = getMenuNodeIndexByName(menu, childrenNames[i]); // TODO: Dette gjør det problematisk å ha barn med samme navn som allerede finnes
         childrenIndices[i] = childIndex;
         menu->nodes[childIndex].parentIndex = newIndex;
     }
@@ -211,11 +193,6 @@ void connectMenuChild(
 void freeMenuNodeRecursively(Menu * menu, int nodeIndex) {
     MenuNode node = menu->nodes[nodeIndex];
 
-    if (node.element != NULL) {
-        free(node.element->shortValueNames);
-        free(node.element->longValueNames);
-    }
-
     for (int i = 0; i < node.nofChildren; i++) {
         freeMenuNodeRecursively(menu, node.childrenIndices[i]);
     }
@@ -245,10 +222,8 @@ void removeMenuChild(
         //exit(EXIT_FAILURE);
     }
 
-    if (menu->openIndex == childIndex) {
-        goBackMenu(menu);
-        goLeftMenu(menu);
-    }
+    // TODO: Må håndtere hvis man sletter den åpne noden, eller en forfader
+    // Da må man gå opp i menyen til et trygt sted før slettingen
 
     for (int i = foundAtIndex; i < parentNode->nofChildren - 1; i++) {
         parentNode->childrenIndices[i] = parentNode->childrenIndices[i + 1];
@@ -359,14 +334,6 @@ const char * getOpenMenuNodeName(Menu * menu) {
     return menu->nodes[menu->openIndex].name;
 }
 
-const char * getShortValueName(MenuValue * element) {
-    int value = *(element->valuePointer);
-    int nameIndex = value - element->minimumValue;
-    const char * shortValueName = element->shortValueNames[nameIndex];
-
-    return shortValueName;
-}
-
 void updateMenuViewModel(Menu * menu) {
     MenuNode * openMenuNode = &menu->nodes[menu->openIndex];
 
@@ -376,18 +343,18 @@ void updateMenuViewModel(Menu * menu) {
     menu->viewModel.isLeaf = openMenuNode->nofChildren == 0;
 
     if (openMenuNode->nofChildren == 0) {
-        MenuValue * openMenuElement = openMenuNode->element;
-        int value = *(openMenuElement->valuePointer);
+        MenuValue * openMenuValue = openMenuNode->element;
 
-        strcpy(menu->viewModel.boxes[0].text, openMenuElement->description);
+        strcpy(menu->viewModel.boxes[0].text, openMenuValue->description);
 
         const char * prefix = menu->bigIncrements ? "<<<" : "<";
         const char * postfix = menu->bigIncrements ? ">>>" : ">";
+        int value = *(openMenuValue->valuePointer);
 
-        if (openMenuElement->shortValueNames != NULL) {
-            int nameIndex = value - openMenuElement->minimumValue;
-            const char * name = openMenuElement->longValueNames[nameIndex];
-            sprintf(menu->viewModel.boxes[0].valueText, "%s  %s  %s", prefix, name, postfix);
+        if (menu->valueRenderer != NULL) {
+            char buffer[MAX_LINE_CHARACTERS];
+            menu->valueRenderer(*openMenuNode, value, true, buffer);
+            sprintf(menu->viewModel.boxes[0].valueText, "%s  %s  %s", prefix, buffer, postfix);
         } else {
             sprintf(menu->viewModel.boxes[0].valueText, "%s  %d  %s", prefix, value, postfix);
         }
@@ -406,16 +373,27 @@ void updateMenuViewModel(Menu * menu) {
             int nodeIndex = firstIndexInPage + i;
 
             MenuNode * childMenuNode = &menu->nodes[openMenuNode->childrenIndices[nodeIndex]];
-            MenuValue * childMenuElement = childMenuNode->element;
+            MenuValue * childMenuValue = childMenuNode->element;
 
             menu->viewModel.boxes[i].isSelected = nodeIndex == openMenuNode->selectedIndex;
 
+            // DRY i disse to casene:
             if (!childMenuNode->isAction && childMenuNode->nofChildren == 0) {
-                if (childMenuElement->shortValueNames != NULL) {
-                    strcpy(menu->viewModel.boxes[i].valueText, getShortValueName(childMenuElement));
+                int childValue = *(childMenuValue->valuePointer);
+                if (menu->valueRenderer != NULL) {
+                    char buffer[MAX_LINE_CHARACTERS];
+                    menu->valueRenderer(*childMenuNode, childValue, false, buffer);
+                    sprintf(menu->viewModel.boxes[i].valueText, "%s", buffer);
                 } else {
-                    int childValue = *(childMenuElement->valuePointer);
                     sprintf(menu->viewModel.boxes[i].valueText, "%d", childValue);
+                }
+            } else {
+                if (menu->valueRenderer != NULL) {
+                    char buffer[MAX_LINE_CHARACTERS];
+                    menu->valueRenderer(*childMenuNode, nodeIndex, false, buffer);
+                    sprintf(menu->viewModel.boxes[i].valueText, "%s", buffer);
+                } else {
+                    sprintf(menu->viewModel.boxes[i].valueText, "%d", nodeIndex);
                 }
             }
 

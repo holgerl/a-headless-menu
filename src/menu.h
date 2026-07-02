@@ -17,7 +17,7 @@ typedef struct {
 } MenuValue;
 
 typedef struct {
-    MenuValue * element;
+    MenuValue * element; // TODO: Rename to menuValue eller value
     const char * name;
     int * childrenIndices;
     int nofChildren;
@@ -42,8 +42,9 @@ typedef struct {
 } MenuViewModel;
 
 // Callback function pointers:
-typedef void (*OnMenuValueChanged)(MenuValue menuElement, int oldValue);
+typedef void (*OnMenuValueChanged)(MenuValue menuValue, int oldValue);
 typedef void (*OnAction)(MenuNode menuNode);
+typedef void (*ValueRenderer)(MenuNode menuNode, int value, bool verbose, char * target);
 
 typedef struct {
     MenuValue * elements;
@@ -57,12 +58,14 @@ typedef struct {
     MenuViewModel viewModel;
     OnMenuValueChanged onMenuValueChanged;
     OnAction onAction;
+    ValueRenderer valueRenderer;
 } Menu;
 
 Menu createMenu(
     int pageSize,
     OnMenuValueChanged onMenuValueChanged,
-    OnAction onAction
+    OnAction onAction,
+    ValueRenderer valueRenderer
 );
 
 int createMenuLeaf(
@@ -71,14 +74,12 @@ int createMenuLeaf(
     const char * description,
     int minimumValue,
     int maximumValue,
-    int * valuePointer,
-    const char * * shortValueNames,
-    const char * * longValueNames
+    int * valuePointer
 );
 
 int createMenuNonLeaf(
     Menu * menu,
-    const char * mame,
+    const char * name,
     const char * * childrenNames,
     int nofChildren
 );
