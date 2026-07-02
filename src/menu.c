@@ -7,10 +7,10 @@
 #define MAX_MENU_SIZE 64
 #define MAX_LINE_CHARACTERS 32
 
-const char * getShortValueName(MenuElement * element);
+const char * getShortValueName(MenuValue * element);
 
 Menu createMenu(int pageSize, OnMenuValueChanged onMenuValueChanged, OnAction onAction) {
-    MenuElement * elements = (MenuElement *) malloc(MAX_MENU_SIZE * sizeof(MenuElement));
+    MenuValue * elements = (MenuValue *) malloc(MAX_MENU_SIZE * sizeof(MenuValue));
     MenuNode * nodes = (MenuNode *) malloc(MAX_MENU_SIZE * sizeof(MenuNode));
 
     if (elements == NULL) { printf("%s\n", "ERROR: elements == NULL"); }
@@ -70,7 +70,7 @@ int createMenuLeaf(
         memcpy(longValueNamesCopy, longValueNames, nameArrayBytes);
     }
 
-    MenuElement element = {
+    MenuValue element = {
         .description = description,
         .minimumValue = minimumValue,
         .maximumValue = maximumValue,
@@ -359,7 +359,7 @@ const char * getOpenMenuNodeName(Menu * menu) {
     return menu->nodes[menu->openIndex].name;
 }
 
-const char * getShortValueName(MenuElement * element) {
+const char * getShortValueName(MenuValue * element) {
     int value = *(element->valuePointer);
     int nameIndex = value - element->minimumValue;
     const char * shortValueName = element->shortValueNames[nameIndex];
@@ -376,7 +376,7 @@ void updateMenuViewModel(Menu * menu) {
     menu->viewModel.isLeaf = openMenuNode->nofChildren == 0;
 
     if (openMenuNode->nofChildren == 0) {
-        MenuElement * openMenuElement = openMenuNode->element;
+        MenuValue * openMenuElement = openMenuNode->element;
         int value = *(openMenuElement->valuePointer);
 
         strcpy(menu->viewModel.boxes[0].text, openMenuElement->description);
@@ -406,7 +406,7 @@ void updateMenuViewModel(Menu * menu) {
             int nodeIndex = firstIndexInPage + i;
 
             MenuNode * childMenuNode = &menu->nodes[openMenuNode->childrenIndices[nodeIndex]];
-            MenuElement * childMenuElement = childMenuNode->element;
+            MenuValue * childMenuElement = childMenuNode->element;
 
             menu->viewModel.boxes[i].isSelected = nodeIndex == openMenuNode->selectedIndex;
 

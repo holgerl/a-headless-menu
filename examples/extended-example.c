@@ -39,7 +39,7 @@ int dataParentMenuIndex;
 char lineTop[MAX_LINE_CHARACTERS];
 char lineBottom[MAX_LINE_CHARACTERS];
 
-void onMenuValueChanged(MenuElement element, int oldValue) {
+void onMenuValueChanged(MenuValue element, int oldValue) {
     if (strcmp(element.description, "MIDI CHANNEL") == 0) {
         printf("MIDI channel changed from %d to %d\n", oldValue, *element.valuePointer);
     } else if (strcmp(element.description, "DRONE NOTE") == 0) {

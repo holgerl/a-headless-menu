@@ -14,10 +14,10 @@ typedef struct {
 
     const char * * shortValueNames;
     const char * * longValueNames;
-} MenuElement;
+} MenuValue;
 
 typedef struct {
-    MenuElement * element;
+    MenuValue * element;
     const char * name;
     int * childrenIndices;
     int nofChildren;
@@ -42,11 +42,11 @@ typedef struct {
 } MenuViewModel;
 
 // Callback function pointers:
-typedef void (*OnMenuValueChanged)(MenuElement menuElement, int oldValue);
+typedef void (*OnMenuValueChanged)(MenuValue menuElement, int oldValue);
 typedef void (*OnAction)(MenuNode menuNode);
 
 typedef struct {
-    MenuElement * elements;
+    MenuValue * elements;
     MenuNode * nodes;
     int nofElements;
     int nofNodes;
