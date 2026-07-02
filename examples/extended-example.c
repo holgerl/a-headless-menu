@@ -34,8 +34,8 @@ Data data[8] = {0};
 int nofData = 0;
 int dataParentMenuIndex;
 
-char lineTop[64]; // Need extra bytes for color esape codes
-char lineBottom[64];
+char lineTop[32]; // Need at least 7 * boxes + 6 for markers and + 1 for null terminator
+char lineBottom[32];
 
 void onMenuValueChanged(MenuElement element, int oldValue) {
     if (strcmp(element.description, "MIDI CHANNEL") == 0) {
@@ -136,7 +136,7 @@ int doCommands(Menu * menu, char * commands) {
 }
 
 int loop() {
-    renderMenu(&menu, lineTop, lineBottom, 64, true);
+    renderMenu(&menu, lineTop, lineBottom, 64);
 
     printf("------\n");
     printf("%s\n", lineTop);
@@ -167,8 +167,8 @@ void doTest() {
     doCommands(&menu, "dw"); // DATA (nr 2)
 
     assertEquals(menu.viewModel.boxes[1].lineBottom[0], '5');
-    renderMenu(&menu, lineTop, lineBottom, 64, true);
-    assertEquals(lineBottom[8 + 2*4], '5'); // 2*4 becuase of color escape codes
+    renderMenu(&menu, lineTop, lineBottom, 64);
+    assertEquals(lineBottom[8 + 2], '5'); // + 2 because of the "| " at the start of the line
 }
 
 void setup() {

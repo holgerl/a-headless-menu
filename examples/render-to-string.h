@@ -3,7 +3,7 @@
 
 #include "../src/menu.h"
 
-void renderMenu(Menu * menu, char * targetLineTop, char * targetLineBottom, int maxLineLength, bool useColor) {
+void renderMenu(Menu * menu, char * targetLineTop, char * targetLineBottom, int maxLineLength) {
     MenuNode * openMenuNode = &menu->nodes[menu->openIndex];
 
     if (openMenuNode->nofChildren == 0) {
@@ -21,16 +21,12 @@ void renderMenu(Menu * menu, char * targetLineTop, char * targetLineBottom, int 
         for (int i = 0; i < menu->viewModel.nofBoxes; i++) {
             bool isSelected = menu->viewModel.boxes[i].isSelected;
 
-            if (isSelected && useColor) {
-                current += snprintf(current, max, "\033[7m"); // Invert colors
-                max -= 4;
+            if (isSelected) {
+                current += snprintf(current, max, "| ");
+                max -= 2;
             }
             current += snprintf(current, max, "%-7s", menu->viewModel.boxes[i].lineTop);
             max -= 7;
-            if (isSelected && useColor) {
-                current += snprintf(current, max, "\033[0m"); // Reset colors
-                max -= 4;
-            }
             current += snprintf(current, max, " ");
             max -= 1;
         }
@@ -50,16 +46,12 @@ void renderMenu(Menu * menu, char * targetLineTop, char * targetLineBottom, int 
 
         for (int i = 0; i < menu->viewModel.nofBoxes; i++) {
             bool isSelected = menu->viewModel.boxes[i].isSelected;
-            if (isSelected && useColor) {
-                current += snprintf(current, max, "\033[7m"); // Invert colors
-                max -= 4;
+            if (isSelected) {
+                current += snprintf(current, max, "| ");
+                max -= 2;
             }
             current += snprintf(current, max, "%-7s", menu->viewModel.boxes[i].lineBottom);
             max -= 7;
-            if (isSelected && useColor) {
-                current += snprintf(current, max, "\033[0m"); // Reset colors
-                max -= 4;
-            }
             current += snprintf(current, max, " ");
             max -= 1;
         }
