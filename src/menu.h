@@ -19,7 +19,6 @@ typedef struct {
 typedef struct {
     MenuElement * element;
     const char * name;
-    int nameBreakpoint;
     int * childrenIndices;
     int nofChildren;
     int index;
@@ -29,8 +28,8 @@ typedef struct {
 } MenuNode;
 
 typedef struct {
-    char * lineTop;
-    char * lineBottom;
+    char * text;
+    char * valueText;
     bool isSelected;
 } MenuBox;
 
@@ -79,15 +78,13 @@ int createMenuLeaf(
 int createMenuNonLeaf(
     Menu * menu,
     const char * mame,
-    int nameBreakpoint,
     const char * * childrenNames,
     int nofChildren
 );
 
 int createMenuAction(
     Menu * menu,
-    const char * name,
-    int nameBreakpoint
+    const char * name
 );
 
 int createMenuRoot(

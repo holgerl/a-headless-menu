@@ -34,8 +34,10 @@ Data data[8] = {0};
 int nofData = 0;
 int dataParentMenuIndex;
 
-char lineTop[32]; // Need at least 7 * boxes + 6 for markers and + 1 for null terminator
-char lineBottom[32];
+#define MAX_LINE_CHARACTERS 32 // Need at least 7 * boxes + 6 for markers and + 1 for null terminator
+
+char lineTop[MAX_LINE_CHARACTERS];
+char lineBottom[MAX_LINE_CHARACTERS];
 
 void onMenuValueChanged(MenuElement element, int oldValue) {
     if (strcmp(element.description, "MIDI CHANNEL") == 0) {
@@ -51,21 +53,21 @@ void addNewMenuElement() {
         return;
     }
 
-    int childIndexA = createMenuLeaf(&menu, "PARAM A", "PARAMETER A", 0, 8, &data[nofData].paramA, NULL, NULL);
-    int childIndexB = createMenuLeaf(&menu, "PARAM B", "PARAMETER B", 0, 127, &data[nofData].paramB, NULL, NULL);
-    int deleteIndex = createMenuAction(&menu, "DELETE", 6);
-    const char * children[] = {"PARAM A", "PARAM B", "DELETE"};
-    int parentIndex = createMenuNonLeaf(&menu, "DATA", 4, children, 3);
+    int childIndexA = createMenuLeaf(&menu, "PARAM A\n\x1A", "PARAMETER A", 0, 8, &data[nofData].paramA, NULL, NULL);
+    int childIndexB = createMenuLeaf(&menu, "PARAM B\n\x1A", "PARAMETER B", 0, 127, &data[nofData].paramB, NULL, NULL);
+    int deleteIndex = createMenuAction(&menu, "DEL\nETE");
+    const char * children[] = {"PARAM A\n\x1A", "PARAM B\n\x1A", "DEL\nETE"};
+    int parentIndex = createMenuNonLeaf(&menu, "DATA", children, 3);
     connectMenuChild(&menu, dataParentMenuIndex, parentIndex);
     nofData++;
 }
 
 void onAction(MenuNode node) {
-    if (strcmp(node.name, "ADDDATA") == 0) {
+    if (strcmp(node.name, "ADD\nDATA") == 0) {
         addNewMenuElement();
     } else if (strcmp(node.name, "ACTION") == 0) {
         printf("Performing action...\n");
-    } else if (strcmp(node.name, "DELETE") == 0) {
+    } else if (strcmp(node.name, "DEL\nETE") == 0) {
         removeMenuChild(&menu, dataParentMenuIndex, node.parentIndex);
     }
 }
@@ -77,29 +79,29 @@ void setupMenu() {
     const char * highLowNames[] = {"LOW", "HIGH"};
     const char * onOffNames[] = {"OFF", "ON"};
 
-    createMenuLeaf(&menu, "STATE", "DRONE ENABLED", 0, 1, &settings.enabled, onOffNames, onOffNames);
-    createMenuLeaf(&menu, "NOTE", "DRONE NOTE", 0, 127, &settings.note, NULL, NULL);
-    const char * droneChildren[] = {"STATE", "NOTE"};
-    createMenuNonLeaf(&menu, "DRONE", 5, droneChildren, 2);
+    createMenuLeaf(&menu, "STATE\n\x1A", "DRONE ENABLED", 0, 1, &settings.enabled, onOffNames, onOffNames);
+    createMenuLeaf(&menu, "NOTE\n\x1A", "DRONE NOTE", 0, 127, &settings.note, NULL, NULL);
+    const char * droneChildren[] = {"STATE\n\x1A", "NOTE\n\x1A"};
+    createMenuNonLeaf(&menu, "DRONE", droneChildren, 2);
 
     const char * envTypeNames[] = {"ADSR", "AR"};
-    createMenuLeaf(&menu, "TYPE", "ENVELOPE TYPE", 0, 1, &settings.envelopeType, envTypeNames, envTypeNames);
-    createMenuLeaf(&menu, "ATTACK", "ENVELOPE ATTACK TIME", 0, 1000, &settings.attack, NULL, NULL);
-    createMenuLeaf(&menu, "DECAY", "ENVELOPE DECAY TIME", 0, 1000, &settings.decay, NULL, NULL);
-    createMenuLeaf(&menu, "SUST", "ENVELOPE SUSTAIN", 0, 100, &settings.sustain, NULL, NULL);
-    createMenuLeaf(&menu, "RELE", "ENVELOPE RELEASE TIME", 0, 1000, &settings.release, NULL, NULL);
-    const char * envelopeChildren[] = {"TYPE", "ATTACK", "DECAY", "SUST", "RELE"};
-    createMenuNonLeaf(&menu, "ENVELOPE", 4, envelopeChildren, 5);
+    createMenuLeaf(&menu, "TYPE\n\x1A", "ENVELOPE TYPE", 0, 1, &settings.envelopeType, envTypeNames, envTypeNames);
+    createMenuLeaf(&menu, "ATTACK\n\x1A", "ENVELOPE ATTACK TIME", 0, 1000, &settings.attack, NULL, NULL);
+    createMenuLeaf(&menu, "DECAY\n\x1A", "ENVELOPE DECAY TIME", 0, 1000, &settings.decay, NULL, NULL);
+    createMenuLeaf(&menu, "SUST\n\x1A", "ENVELOPE SUSTAIN", 0, 100, &settings.sustain, NULL, NULL);
+    createMenuLeaf(&menu, "RELE\n\x1A", "ENVELOPE RELEASE TIME", 0, 1000, &settings.release, NULL, NULL);
+    const char * envelopeChildren[] = {"TYPE\n\x1A", "ATTACK\n\x1A", "DECAY\n\x1A", "SUST\n\x1A", "RELE\n\x1A"};
+    createMenuNonLeaf(&menu, "ENVE\nLOPE", envelopeChildren, 5);
 
-    createMenuLeaf(&menu, "CHAN", "MIDI CHANNEL", 1, 16, &settings.channel, NULL, NULL);
-    createMenuLeaf(&menu, "BRIGHT", "DISPLAY BRIGHTNESS", 0, 1, &settings.brightness, highLowNames, highLowNames);
-    createMenuAction(&menu, "ADDDATA", 3);
-    const char * systemChildren[] = {"CHAN", "BRIGHT", "ADDDATA"};
-    dataParentMenuIndex = createMenuNonLeaf(&menu, "SYSTEM", 6, systemChildren, 3);
+    createMenuLeaf(&menu, "CHAN\n\x1A", "MIDI CHANNEL", 1, 16, &settings.channel, NULL, NULL);
+    createMenuLeaf(&menu, "BRIGHT\n\x1A", "DISPLAY BRIGHTNESS", 0, 1, &settings.brightness, highLowNames, highLowNames);
+    createMenuAction(&menu, "ADD\nDATA");
+    const char * systemChildren[] = {"CHAN\n\x1A", "BRIGHT\n\x1A", "ADD\nDATA"};
+    dataParentMenuIndex = createMenuNonLeaf(&menu, "SYSTEM", systemChildren, 3);
 
-    createMenuAction(&menu, "ACTION", 6);
+    createMenuAction(&menu, "ACTION");
 
-    const char * menuChildren[] = {"ENVELOPE", "DRONE", "ACTION", "SYSTEM"};
+    const char * menuChildren[] = {"ENVE\nLOPE", "DRONE", "ACTION", "SYSTEM"};
     createMenuRoot(&menu, menuChildren, 4);
 }
 
@@ -136,7 +138,7 @@ int doCommands(Menu * menu, char * commands) {
 }
 
 int loop() {
-    renderMenu(&menu, lineTop, lineBottom, 64);
+    renderMenu(&menu, lineTop, lineBottom, MAX_LINE_CHARACTERS);
 
     printf("------\n");
     printf("%s\n", lineTop);
@@ -166,8 +168,8 @@ void doTest() {
     doCommands(&menu, "ddw"); // DELETE
     doCommands(&menu, "dw"); // DATA (nr 2)
 
-    assertEquals(menu.viewModel.boxes[1].lineBottom[0], '5');
-    renderMenu(&menu, lineTop, lineBottom, 64);
+    assertEquals(menu.viewModel.boxes[1].valueText[0], '5');
+    renderMenu(&menu, lineTop, lineBottom, MAX_LINE_CHARACTERS);
     assertEquals(lineBottom[8 + 2], '5'); // + 2 because of the "| " at the start of the line
 }
 
