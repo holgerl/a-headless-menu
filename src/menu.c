@@ -410,8 +410,6 @@ void updateMenuViewModel(Menu * menu) {
 
             menu->viewModel.boxes[i].isSelected = nodeIndex == openMenuNode->selectedIndex;
 
-            strcpy(menu->viewModel.boxes[i].text, childMenuNode->name);
-
             if (!childMenuNode->isAction && childMenuNode->nofChildren == 0) {
                 if (childMenuElement->shortValueNames != NULL) {
                     strcpy(menu->viewModel.boxes[i].valueText, getShortValueName(childMenuElement));
@@ -419,7 +417,9 @@ void updateMenuViewModel(Menu * menu) {
                     int childValue = *(childMenuElement->valuePointer);
                     sprintf(menu->viewModel.boxes[i].valueText, "%d", childValue);
                 }
-            } 
+            }
+
+            sprintf(menu->viewModel.boxes[i].text, childMenuNode->name, menu->viewModel.boxes[i].valueText);
         }
 
         menu->viewModel.nofBoxes = nofElementsOnPage;

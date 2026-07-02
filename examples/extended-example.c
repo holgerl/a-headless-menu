@@ -53,10 +53,10 @@ void addNewMenuElement() {
         return;
     }
 
-    int childIndexA = createMenuLeaf(&menu, "PARAM A\n\x1A", "PARAMETER A", 0, 8, &data[nofData].paramA, NULL, NULL);
-    int childIndexB = createMenuLeaf(&menu, "PARAM B\n\x1A", "PARAMETER B", 0, 127, &data[nofData].paramB, NULL, NULL);
+    int childIndexA = createMenuLeaf(&menu, "PARAM A\n%s", "PARAMETER A", 0, 8, &data[nofData].paramA, NULL, NULL);
+    int childIndexB = createMenuLeaf(&menu, "PARAM B\n%s", "PARAMETER B", 0, 127, &data[nofData].paramB, NULL, NULL);
     int deleteIndex = createMenuAction(&menu, "DEL\nETE");
-    const char * children[] = {"PARAM A\n\x1A", "PARAM B\n\x1A", "DEL\nETE"};
+    const char * children[] = {"PARAM A\n%s", "PARAM B\n%s", "DEL\nETE"};
     int parentIndex = createMenuNonLeaf(&menu, "DATA", children, 3);
     connectMenuChild(&menu, dataParentMenuIndex, parentIndex);
     nofData++;
@@ -79,24 +79,24 @@ void setupMenu() {
     const char * highLowNames[] = {"LOW", "HIGH"};
     const char * onOffNames[] = {"OFF", "ON"};
 
-    createMenuLeaf(&menu, "STATE\n\x1A", "DRONE ENABLED", 0, 1, &settings.enabled, onOffNames, onOffNames);
-    createMenuLeaf(&menu, "NOTE\n\x1A", "DRONE NOTE", 0, 127, &settings.note, NULL, NULL);
-    const char * droneChildren[] = {"STATE\n\x1A", "NOTE\n\x1A"};
+    createMenuLeaf(&menu, "STATE\n%s", "DRONE ENABLED", 0, 1, &settings.enabled, onOffNames, onOffNames);
+    createMenuLeaf(&menu, "NOTE\n%s", "DRONE NOTE", 0, 127, &settings.note, NULL, NULL);
+    const char * droneChildren[] = {"STATE\n%s", "NOTE\n%s"};
     createMenuNonLeaf(&menu, "DRONE", droneChildren, 2);
 
     const char * envTypeNames[] = {"ADSR", "AR"};
-    createMenuLeaf(&menu, "TYPE\n\x1A", "ENVELOPE TYPE", 0, 1, &settings.envelopeType, envTypeNames, envTypeNames);
-    createMenuLeaf(&menu, "ATTACK\n\x1A", "ENVELOPE ATTACK TIME", 0, 1000, &settings.attack, NULL, NULL);
-    createMenuLeaf(&menu, "DECAY\n\x1A", "ENVELOPE DECAY TIME", 0, 1000, &settings.decay, NULL, NULL);
-    createMenuLeaf(&menu, "SUST\n\x1A", "ENVELOPE SUSTAIN", 0, 100, &settings.sustain, NULL, NULL);
-    createMenuLeaf(&menu, "RELE\n\x1A", "ENVELOPE RELEASE TIME", 0, 1000, &settings.release, NULL, NULL);
-    const char * envelopeChildren[] = {"TYPE\n\x1A", "ATTACK\n\x1A", "DECAY\n\x1A", "SUST\n\x1A", "RELE\n\x1A"};
+    createMenuLeaf(&menu, "TYPE\n%s", "ENVELOPE TYPE", 0, 1, &settings.envelopeType, envTypeNames, envTypeNames);
+    createMenuLeaf(&menu, "ATTACK\n%s", "ENVELOPE ATTACK TIME", 0, 1000, &settings.attack, NULL, NULL);
+    createMenuLeaf(&menu, "DECAY\n%s", "ENVELOPE DECAY TIME", 0, 1000, &settings.decay, NULL, NULL);
+    createMenuLeaf(&menu, "SUST\n%s", "ENVELOPE SUSTAIN", 0, 100, &settings.sustain, NULL, NULL);
+    createMenuLeaf(&menu, "RELE\n%s", "ENVELOPE RELEASE TIME", 0, 1000, &settings.release, NULL, NULL);
+    const char * envelopeChildren[] = {"TYPE\n%s", "ATTACK\n%s", "DECAY\n%s", "SUST\n%s", "RELE\n%s"};
     createMenuNonLeaf(&menu, "ENVE\nLOPE", envelopeChildren, 5);
 
-    createMenuLeaf(&menu, "CHAN\n\x1A", "MIDI CHANNEL", 1, 16, &settings.channel, NULL, NULL);
-    createMenuLeaf(&menu, "BRIGHT\n\x1A", "DISPLAY BRIGHTNESS", 0, 1, &settings.brightness, highLowNames, highLowNames);
+    createMenuLeaf(&menu, "CHAN\n%s", "MIDI CHANNEL", 1, 16, &settings.channel, NULL, NULL);
+    createMenuLeaf(&menu, "BRIGHT\n%s", "DISPLAY BRIGHTNESS", 0, 1, &settings.brightness, highLowNames, highLowNames);
     createMenuAction(&menu, "ADD\nDATA");
-    const char * systemChildren[] = {"CHAN\n\x1A", "BRIGHT\n\x1A", "ADD\nDATA"};
+    const char * systemChildren[] = {"CHAN\n%s", "BRIGHT\n%s", "ADD\nDATA"};
     dataParentMenuIndex = createMenuNonLeaf(&menu, "SYSTEM", systemChildren, 3);
 
     createMenuAction(&menu, "ACTION");

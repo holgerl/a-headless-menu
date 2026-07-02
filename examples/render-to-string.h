@@ -7,7 +7,6 @@
 
 void renderMenu(MenuViewModel viewModel, char * targetLineTop, char * targetLineBottom, int maxLineLength) {
     if (viewModel.isLeaf) {
-        // TODO: Bruk to bokser i stedet for to linjer, og så kan man velge hvordan man rendrer det
         snprintf(targetLineTop, maxLineLength, "%s", viewModel.boxes[0].text);
         snprintf(targetLineBottom, maxLineLength, "%s", viewModel.boxes[0].valueText);
     } else {
@@ -42,13 +41,6 @@ void renderMenu(MenuViewModel viewModel, char * targetLineTop, char * targetLine
                 } else if (c == '\n') {
                     targetLine = targetLineBottom;
                     k = i;
-                } else if (c == '\x1A') {
-                    int len = strlen(viewModel.boxes[boxIndex].valueText);
-                    if (k + len >= maxLineLength) {
-                        len = maxLineLength - k - 1;
-                    }
-                    memcpy(targetLine + k, viewModel.boxes[boxIndex].valueText, len);
-                    k += len;
                 } else {
                     targetLine[k++] = c;
                 }
