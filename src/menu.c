@@ -373,6 +373,7 @@ void updateMenuViewModel(Menu * menu) {
     int firstIndexInPage = (openMenuNode->selectedIndex / menu->pageSize) * (menu->pageSize);
     menu->viewModel.isFirstPage = openMenuNode->selectedIndex < menu->pageSize;
     menu->viewModel.isLastPage = openMenuNode->nofChildren - firstIndexInPage <= menu->pageSize;
+    menu->viewModel.isLeaf = openMenuNode->nofChildren == 0;
 
     if (openMenuNode->nofChildren == 0) {
         MenuElement * openMenuElement = openMenuNode->element;

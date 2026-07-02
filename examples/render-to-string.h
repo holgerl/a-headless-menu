@@ -5,15 +5,12 @@
 
 #define BOX_WIDTH 7
 
-void renderMenu(Menu * menu, char * targetLineTop, char * targetLineBottom, int maxLineLength) {
-    MenuNode * openMenuNode = &menu->nodes[menu->openIndex];
-
-    if (openMenuNode->nofChildren == 0) {
+void renderMenu(MenuViewModel viewModel, char * targetLineTop, char * targetLineBottom, int maxLineLength) {
+    if (viewModel.isLeaf) {
         // TODO: Bruk to bokser i stedet for to linjer, og så kan man velge hvordan man rendrer det
-        snprintf(targetLineTop, maxLineLength, "%s", menu->viewModel.boxes[0].text);
-        snprintf(targetLineBottom, maxLineLength, "%s", menu->viewModel.boxes[0].valueText);
+        snprintf(targetLineTop, maxLineLength, "%s", viewModel.boxes[0].text);
+        snprintf(targetLineBottom, maxLineLength, "%s", viewModel.boxes[0].valueText);
     } else {
-
         // Clear lines first:
         for (int i = 0; i < maxLineLength; i++) {
             targetLineTop[i] = ' ';
@@ -22,13 +19,13 @@ void renderMenu(Menu * menu, char * targetLineTop, char * targetLineBottom, int 
 
         int i = 0;
 
-        if (!menu->viewModel.isFirstPage) {
+        if (!viewModel.isFirstPage) {
             targetLineTop[i] = '<';
             i += 2;
         }
         
-        for (int boxIndex = 0; boxIndex < menu->viewModel.nofBoxes; boxIndex++) {
-            bool isSelected = menu->viewModel.boxes[boxIndex].isSelected;
+        for (int boxIndex = 0; boxIndex < viewModel.nofBoxes; boxIndex++) {
+            bool isSelected = viewModel.boxes[boxIndex].isSelected;
 
             if (isSelected) {
                 targetLineTop[i] = '|';
@@ -36,19 +33,21 @@ void renderMenu(Menu * menu, char * targetLineTop, char * targetLineBottom, int 
                 i += 2;
             }
             
-            int j = 0;
             int k = i;
             char * targetLine = targetLineTop;
-            for (; j < maxLineLength; j++) {
-                char c = menu->viewModel.boxes[boxIndex].text[j];
+            for (int j = 0; j < maxLineLength; j++) {
+                char c = viewModel.boxes[boxIndex].text[j];
                 if (c == 0) {
                     break;
                 } else if (c == '\n') {
                     targetLine = targetLineBottom;
                     k = i;
                 } else if (c == '\x1A') {
-                    int len = strlen(menu->viewModel.boxes[boxIndex].valueText);
-                    memcpy(targetLine + k, menu->viewModel.boxes[boxIndex].valueText, len);
+                    int len = strlen(viewModel.boxes[boxIndex].valueText);
+                    if (k + len >= maxLineLength) {
+                        len = maxLineLength - k - 1;
+                    }
+                    memcpy(targetLine + k, viewModel.boxes[boxIndex].valueText, len);
                     k += len;
                 } else {
                     targetLine[k++] = c;
@@ -58,7 +57,7 @@ void renderMenu(Menu * menu, char * targetLineTop, char * targetLineBottom, int 
             i += BOX_WIDTH + 1;
         }
 
-        if (!menu->viewModel.isLastPage) {
+        if (!viewModel.isLastPage) {
             targetLineTop[i+1] = '>';
             i += 2;
         }

@@ -138,7 +138,7 @@ int doCommands(Menu * menu, char * commands) {
 }
 
 int loop() {
-    renderMenu(&menu, lineTop, lineBottom, MAX_LINE_CHARACTERS);
+    renderMenu(menu.viewModel, lineTop, lineBottom, MAX_LINE_CHARACTERS);
 
     printf("------\n");
     printf("%s\n", lineTop);
@@ -169,7 +169,7 @@ void doTest() {
     doCommands(&menu, "dw"); // DATA (nr 2)
 
     assertEquals(menu.viewModel.boxes[1].valueText[0], '5');
-    renderMenu(&menu, lineTop, lineBottom, MAX_LINE_CHARACTERS);
+    renderMenu(menu.viewModel, lineTop, lineBottom, MAX_LINE_CHARACTERS);
     assertEquals(lineBottom[8 + 2], '5'); // + 2 because of the "| " at the start of the line
 }
 

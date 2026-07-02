@@ -38,6 +38,7 @@ typedef struct {
     int nofBoxes;
     bool isFirstPage;
     bool isLastPage;
+    bool isLeaf;
 } MenuViewModel;
 
 // Callback function pointers:
